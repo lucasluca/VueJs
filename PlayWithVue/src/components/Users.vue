@@ -19,7 +19,7 @@
       <br>
       <hr>
       <ul>
-          <li v-for="user in users">
+          <li v-for="user in users" :key="user">
               <input type="checkbox" class="toggle" v-model="user.contato">
               <span :class="{contato: user.contato}">
                 {{user.name}}  :  {{user.email}} <button v-on:click="deleteUser(user)">X</button>

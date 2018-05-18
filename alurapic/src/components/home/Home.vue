@@ -2,9 +2,12 @@
 
  <div class="corpo">
    <h1 class="centralizado">AluraPic</h1>
+
+    <p v-show="mensagem" class="centralizado">{{ mensagem }}</p>
+
    <input type="search" class="filtro" @input="filtro = $event.target.value" placeholder="filtre pelo título da foto">
        <ul class="lista-fotos">
-            <li class="lista-fotos-item" v-for="foto in fotosComFiltro" :key="foto.titulo">
+            <li class="lista-fotos-item" v-for="foto in fotosComFiltro" :key="foto._id">
                 <meu-painel :titulo="foto.titulo">
                     <imagem-responsiva :url="foto.url" :titulo="foto.titulo" v-meu-transform:scale.animate="1.2"/>
                     <meu-botao :confirmacao="true" estilo="padrao" rotulo="remover" tipo="button" @botaoAtivado="remove(foto)"/>
@@ -32,21 +35,41 @@ export default {
   data() {
     return {
       fotos: [],
-      filtro: ''
+      filtro: '',
+      mensagem: ''
     }
   },
   methods: {
     remove(foto) {
          
-        alert('Remove ' + foto.titulo);
+        this.$http
+        .delete(`v1/fotos/${foto._id}`)
+        .then(() => {
+            let indice = this.fotos.indexOf(foto); // acha a posição da foto na lista
+            this.fotos.splice(indice, 1); // a instrução altera o array
+            // assim que apagar, exibe a mensagem para o usuário
+            this.mensagem = 'Foto removida com sucesso'
+          }, 
+          err => {
+            this.mensagem = 'Não foi possível remover a foto';
+            console.log(err);
+          }
+        );
         
     }
   },
   created() {
-    this.$http.get('http://localhost:3000/v1/fotos')
-      .then(function(response) {
-          this.fotos = response.data;
-      })
+
+    this.resource = this.$resource('v1/fotos');
+
+    this.resource
+      .query()
+      .then(res => this.fotos = res.data, err => console.log(err));
+
+    // this.$http.get('v1/fotos')
+    //   .then(function(response) {
+    //       this.fotos = response.data;
+    //   })
       
   },
 

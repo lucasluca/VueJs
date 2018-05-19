@@ -40,7 +40,6 @@ export default class FotoService {
     }
 
     busca(id) {
-
         return this._resource
             .get({ id })
             .then(res => res.json());

@@ -10,7 +10,10 @@
             <li class="lista-fotos-item" v-for="foto in fotosComFiltro" :key="foto._id">
                 <meu-painel :titulo="foto.titulo">
                     <imagem-responsiva :url="foto.url" :titulo="foto.titulo" v-meu-transform:scale.animate="1.2"/>
-                    <meu-botao :confirmacao="true" estilo="padrao" rotulo="remover" tipo="button" @botaoAtivado="remove(foto)"/>
+                    <router-link :to="{ name: 'altera', params: { id : foto._id }}">
+                      <meu-botao rotulo="Alterar" tipo="button"/>
+                    </router-link>  
+                    <meu-botao :confirmacao="true" estilo="perigo" rotulo="Remover" tipo="button" @botaoAtivado="remove(foto)"/>
                 </meu-painel>
             </li>
         </ul>
@@ -23,6 +26,8 @@
 import Painel from '../shared/painel/Painel';
 import ImagemResponsiva from '../shared/imagem-responsiva/ImagemResponsiva';
 import Botao from '../shared/botao/Botao';
+import FotoService from '../../domain/foto/FotoService';
+
 
 export default {
 
@@ -41,30 +46,69 @@ export default {
   },
   methods: {
     remove(foto) {
-         
-        this.$http
-        .delete(`v1/fotos/${foto._id}`)
-        .then(() => {
-            let indice = this.fotos.indexOf(foto); // acha a posição da foto na lista
-            this.fotos.splice(indice, 1); // a instrução altera o array
-            // assim que apagar, exibe a mensagem para o usuário
+
+      this.service
+        .apaga(foto._id)
+        .then(
+          () => {
+            let indice = this.fotos.indexOf(foto);
+            this.fotos.splice(indice, 1);
             this.mensagem = 'Foto removida com sucesso'
           }, 
           err => {
-            this.mensagem = 'Não foi possível remover a foto';
+            err => this.mensagem = err.message;
             console.log(err);
           }
-        );
+        )
+
+      //  this.resource
+      //   .delete({id: foto._id})
+      //   .then(
+      //     () => {
+      //       let indice = this.fotos.indexOf(foto);
+      //       this.fotos.splice(indice, 1);
+      //       this.mensagem = 'Foto removida com sucesso'
+      //     }, 
+      //     err => {
+      //       this.mensagem = 'Não foi possível remover a foto';
+      //       console.log(err);
+      //     }
+      //   )
+         
+        // this.$http
+        // .delete(`v1/fotos/${foto._id}`)
+        // .then(() => {
+        //     let indice = this.fotos.indexOf(foto); // acha a posição da foto na lista
+        //     this.fotos.splice(indice, 1); // a instrução altera o array
+        //     // assim que apagar, exibe a mensagem para o usuário
+        //     this.mensagem = 'Foto removida com sucesso'
+        //   }, 
+        //   err => {
+        //     this.mensagem = 'Não foi possível remover a foto';
+        //     console.log(err);
+        //   }
+        // );
         
     }
   },
   created() {
 
-    this.resource = this.$resource('v1/fotos');
+    // this.resource = this.$resource('v1/fotos{/id}');
 
-    this.resource
-      .query()
-      .then(res => this.fotos = res.data, err => console.log(err));
+     // criando uma instância do nosso serviço que depende de $resource
+    this.service = new FotoService(this.$resource);
+
+    this.service
+      .lista()
+      .then(fotos => this.fotos = fotos, 
+      err =>  { 
+        this.mensagem = err.message;
+      });
+
+
+    // this.resource
+    //   .query()
+    //   .then(res => this.fotos = res.data, err => console.log(err));
 
     // this.$http.get('v1/fotos')
     //   .then(function(response) {
